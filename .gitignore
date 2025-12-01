@@ -6,3 +6,4 @@ StartupDocs.md
 .vscode/
 data/
 logs/
+*__pycache__/*
