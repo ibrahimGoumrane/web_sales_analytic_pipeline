@@ -1,3 +1,3 @@
 from .base import CleanData
-
-__all__ = ['CleanData']
+from .main import run_cleaner
+__all__ = ['CleanData', 'run_cleaner']

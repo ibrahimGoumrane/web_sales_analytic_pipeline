@@ -50,7 +50,7 @@ class CleanDataJumia(CleanData):
             df['review_count'] = df['review_count'].apply(self._clean_numeric)
             
         # Convert booleans
-        bool_cols = ['is_official_store', 'has_express_delivery']
+        bool_cols = ['is_official_store']
         for col in bool_cols:
             if col in df.columns:
                 df[col] = df[col].astype(bool)

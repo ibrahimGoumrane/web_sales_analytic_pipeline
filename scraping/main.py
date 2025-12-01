@@ -8,11 +8,6 @@ from typing import Optional
 
 # Import all scrapers
 from .jumia import Jumia
-from .marjane import Marjane
-from .electroplanet import Electroplanet
-from .bikhir import Bikhir
-from .decathlon import Decathlon
-from .hmizate import Hmizate
 
 logger = logging.getLogger(__name__)
 
@@ -20,17 +15,12 @@ logger = logging.getLogger(__name__)
 class ScraperOrchestrator:
     """
     Main class to orchestrate scraping across different websites.
-    Uses Singleton pattern for scraper instances.
+    Currently supports Jumia only.
     """
     
     # Map of available scrapers
     SCRAPERS = {
         'jumia': Jumia,
-        'marjane': Marjane,
-        'electroplanet': Electroplanet,
-        'bikhir': Bikhir,
-        'decathlon': Decathlon,
-        'hmizate': Hmizate,
     }
     
     @classmethod

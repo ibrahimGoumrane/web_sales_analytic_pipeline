@@ -256,9 +256,6 @@ class Jumia(Base):
             mall_badge = product_element.select_one('div.bdg._mall')
             data['is_official_store'] = bool(mall_badge)
             
-            # Express delivery
-            express_badge = product_element.select_one('svg.xprss')
-            data['has_express_delivery'] = bool(express_badge)
             
             # Scrape metadata
             data['scraped_at'] = datetime.now().isoformat()
@@ -606,9 +603,6 @@ if __name__ == "__main__":
             mall_badge = product_element.select_one('div.bdg._mall')
             data['is_official_store'] = bool(mall_badge)
             
-            # Express delivery
-            express_badge = product_element.select_one('svg.xprss')
-            data['has_express_delivery'] = bool(express_badge)
             
             # Scrape metadata
             data['scraped_at'] = datetime.now().isoformat()
