@@ -3,7 +3,7 @@ from datetime import datetime
 import logging
 import os
 import re
-from scraping import Main
+from scraping import Base , handle_url
 
 # Setup logging
 os.makedirs("logs", exist_ok=True)
@@ -18,7 +18,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class Jumia(Main):
+class Jumia(Base):
     """
     Jumia.ma web scraper for extracting product data.
     Inherits common functionality from Main base class.
@@ -67,12 +67,9 @@ class Jumia(Main):
                         len(text) > 2 and
                         href not in seen_categories):
                         
-                        # Build full URL
-                        if href.startswith('/'):
-                            full_url = self.base_url + href
-                        elif href.startswith('http'):
-                            full_url = href
-                        else:
+                        # Build full URL using utility function
+                        full_url = handle_url(href, self.base_url)
+                        if not full_url or href.startswith('http') and not href.startswith(self.base_url):
                             continue
                         
                         category_data = {
@@ -99,56 +96,89 @@ class Jumia(Main):
         except Exception as e:
             logger.error(f"❌ Error in scrape_categories: {e}")
     
-    def scrape_product_list(self, category_url, max_pages=5):
+    def scrape_product_list(self, category_url, max_products=1000):
         """
-        Scrape product listings from a category page.
+        Scrape product listings from a category page by following the Next button.
         
         Args:
-            category_url: URL of the category page
-            max_pages: Maximum number of pages to scrape
+            category_url: URL of the category page to start from
+            max_products: Maximum number of products to scrape (default: 1000, use None for unlimited)
         """
         logger.info(f"📦 Scraping product list: {category_url}")
+        logger.info(f"🎯 Target: {max_products if max_products else 'All available'} products")
         
-        for page in range(1, max_pages + 1):
+        current_url = category_url
+        page_num = 1
+        initial_count = len(self.products)
+        
+        while True:
             try:
-                # Build pagination URL
-                if '?' in category_url:
-                    page_url = f"{category_url}&page={page}"
-                else:
-                    page_url = f"{category_url}?page={page}"
+                # Check if we've reached the product limit
+                if max_products and (len(self.products) - initial_count) >= max_products:
+                    logger.info(f"🎯 Reached target of {max_products} products")
+                    break
                 
-                response = self._make_request(page_url)
+                # Fetch the current page
+                response = self._make_request(current_url)
                 if not response:
-                    logger.warning(f"⚠️ Failed to fetch page {page}")
+                    logger.warning(f"⚠️ Failed to fetch page {page_num}")
                     break
                 
                 soup = BeautifulSoup(response.content, 'html.parser')
                 
                 # Find product articles
-                products = soup.select('article.prd')
+                products = soup.select('article.prd._fb.col.c-prd')
                 
                 if not products:
-                    logger.info(f"🛑 No products found on page {page}, stopping pagination")
+                    logger.info(f"🛑 No products found on page {page_num}, stopping")
                     break
                 
-                logger.info(f"  📄 Page {page}: Found {len(products)} products")
+                logger.info(f"  📄 Page {page_num}: Found {len(products)} products")
                 
+                # Extract product data
+                products_added = 0
                 for product in products:
+                    # Check product limit before adding each product
+                    if max_products and (len(self.products) - initial_count) >= max_products:
+                        break
+                        
                     product_data = self._extract_product_data(product)
                     if product_data:
                         self.products.append(product_data)
+                        products_added += 1
                 
-                # Check if there's a next page
-                next_page = soup.select_one('a.pg[aria-label*="suivante"]')
-                if not next_page:
-                    logger.info("🏁 No more pages available")
+                logger.info(f"  ✅ Added {products_added} products (Total: {len(self.products) - initial_count})")
+                
+                # Check if we've reached the limit
+                if max_products and (len(self.products) - initial_count) >= max_products:
+                    logger.info(f"🎯 Reached target of {max_products} products")
                     break
+                
+                # Find the "Next" button and get its URL
+                next_button = soup.select_one('a.pg[aria-label*="suivante"]')
+                
+                if not next_button:
+                    logger.info("🏁 No 'Next' button found - reached the last page")
+                    break
+                
+                next_href = next_button.get('href')
+                if not next_href:
+                    logger.info("🏁 'Next' button has no href - reached the last page")
+                    break
+                
+                # Build the next URL using utility function
+                current_url = handle_url(next_href, self.base_url)
+                
+                page_num += 1
+                logger.info(f"  ➡️ Following Next button to page {page_num}")
                     
             except Exception as e:
-                logger.error(f"❌ Error scraping page {page}: {e}")
-                continue
+                logger.error(f"❌ Error scraping page {page_num}: {e}")
+                break
         
-        logger.info(f"✅ Total products scraped so far: {len(self.products)}")
+        products_scraped = len(self.products) - initial_count
+        logger.info(f"✅ Scraped {products_scraped} products from this category ({page_num} pages)")
+        logger.info(f"📊 Total products in memory: {len(self.products)}")
     
     def _extract_product_data(self, product_element):
         """
@@ -202,7 +232,7 @@ class Jumia(Main):
             link_elem = product_element.select_one('a.core')
             if link_elem:
                 href = link_elem.get('href', '')
-                data['url'] = self.base_url + href if href.startswith('/') else href
+                data['url'] = handle_url(href, self.base_url)
             else:
                 data['url'] = None
             
@@ -240,12 +270,12 @@ class Jumia(Main):
             logger.warning(f"⚠️ Error extracting product data: {e}")
             return None
     
-    def scrape_all_categories(self, max_pages_per_category=3):
+    def scrape_all_categories(self, max_products_per_category=1000):
         """
         Scrape products from all discovered categories.
         
         Args:
-            max_pages_per_category: Max pages to scrape per category
+            max_products_per_category: Maximum products to scrape per category (default: 1000, use None for unlimited)
         """
         if not self.categories:
             logger.warning("⚠️ No categories found. Run scrape_categories() first.")
@@ -261,7 +291,7 @@ class Jumia(Main):
             try:
                 self.scrape_product_list(
                     category['url'], 
-                    max_pages=max_pages_per_category
+                    max_products=max_products_per_category
                 )
             except Exception as e:
                 logger.error(f"❌ Failed to scrape category {category['name']}: {e}")
@@ -272,14 +302,14 @@ class Jumia(Main):
         self._save_json(self.products, 'products.json')
         self._save_csv(self.products, 'products.csv')
     
-    def run(self, scrape_categories=True, scrape_products=True, max_pages=3):
+    def run(self, scrape_categories=True, scrape_products=True, max_products=1000):
         """
         Run the complete scraping workflow.
         
         Args:
             scrape_categories: Whether to scrape categories
             scrape_products: Whether to scrape product listings
-            max_pages: Maximum pages per category
+            max_products: Maximum products per category (default: 1000, use None for unlimited)
         """
         logger.info("=" * 60)
         logger.info("🚀 Starting Jumia.ma Scraper")
@@ -291,7 +321,7 @@ class Jumia(Main):
             
             if scrape_products:
                 if self.categories:
-                    self.scrape_all_categories(max_pages_per_category=max_pages)
+                    self.scrape_all_categories(max_products_per_category=max_products)
                 else:
                     logger.warning("⚠️ No categories to scrape products from")
             
@@ -319,12 +349,16 @@ class Jumia(Main):
 if __name__ == "__main__":
     scraper = Jumia()
     
-    # Option 1: Full workflow
-    scraper.run(scrape_categories=True, scrape_products=True, max_pages=2)
+    # Option 1: Full workflow with product limit
+    scraper.run(scrape_categories=True, scrape_products=True, max_products=500)
     
-    # Option 2: Step by step
+    # Option 2: Unlimited scraping (scrape all products)
+    # scraper.run(scrape_categories=True, scrape_products=True, max_products=None)
+    
+    # Option 3: Step by step
     # scraper.scrape_categories()
-    # scraper.scrape_product_list("https://www.jumia.ma/telephone-tablette/", max_pages=3)
+    # scraper.scrape_product_list("https://www.jumia.ma/telephone-tablette/", max_products=1000)
+
 
     """
     Jumia.ma web scraper for extracting product data.
@@ -696,8 +730,6 @@ if __name__ == "__main__":
     scraper = Jumia()
     
     # Option 1: Full workflow
-    scraper.run(scrape_categories=True, scrape_products=True, max_pages=2)
+    scraper.run(scrape_categories=True, scrape_products=True, max_products=1000)
     
-    # Option 2: Step by step
-    # scraper.scrape_categories()
-    # scraper.scrape_product_list("https://www.jumia.ma/telephone-tablette/", max_pages=3)
+
