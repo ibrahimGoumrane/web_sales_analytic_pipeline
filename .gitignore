@@ -1,3 +1,8 @@
 Recomendations.md
 html_structure/
 env/
+__pycache__/
+StartupDocs.md
+.vscode/
+data/
+logs/
