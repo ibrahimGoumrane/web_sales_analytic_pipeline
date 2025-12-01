@@ -11,7 +11,7 @@ import sys
 Allow Airflow to import modules from the project root
 """
 sys.path.append('/opt/airflow/project')
-
+os.chdir('/opt/airflow/project')
 
 default_args = {
     'owner': 'airflow',
@@ -26,7 +26,7 @@ with DAG(
     'jumia_daily_etl',
     default_args=default_args,
     description='Daily ETL for Jumia: Scrape -> Transform -> Load',
-    schedule_interval='@daily',
+    schedule='@daily',
     start_date=datetime(2024, 1, 1),
     catchup=False,
 ) as dag:
@@ -34,12 +34,15 @@ with DAG(
     def scrape_jumia():
         """Scrape 1000 items per category from Jumia."""
         print("Starting Jumia scraping...")
-        run_scraper('jumia', max_products=1000)
+        # Change to project directory so data is saved to mounted volume
+        print(f"Working directory: {os.getcwd()}")
+        run_scraper('jumia', max_products=100)
         print("Scraping completed.")
 
     def transform_jumia():
         """Clean the scraped Jumia data."""
         print("Starting Jumia transformation...")
+        print(f"Working directory: {os.getcwd()}")
         run_cleaner('jumia')
         print("Transformation completed.")
 

@@ -87,9 +87,9 @@ class Jumia(Base):
             
             logger.info(f"✅ Found {len(self.categories)} categories")
             
-            # Save to JSON using parent class method
+            # Save to CSV in categories directory
             if self.categories:
-                self._save_json(self.categories, 'categories.json')
+                self._save_csv(self.categories, f"{self.site}.csv", is_category=True)
             else:
                 logger.warning("⚠️ No categories found to save")
             
@@ -146,6 +146,12 @@ class Jumia(Base):
                     if product_data:
                         self.products.append(product_data)
                         products_added += 1
+                        
+                        # Incremental save every 100 products
+                        if len(self.products) % 100 == 0:
+                            from datetime import datetime
+                            filename = f"jumia_products_{datetime.now().strftime('%Y%m%d')}.csv"
+                            self._save_csv(self.products, filename)
                 
                 logger.info(f"  ✅ Added {products_added} products (Total: {len(self.products) - initial_count})")
                 
@@ -179,6 +185,12 @@ class Jumia(Base):
         products_scraped = len(self.products) - initial_count
         logger.info(f"✅ Scraped {products_scraped} products from this category ({page_num} pages)")
         logger.info(f"📊 Total products in memory: {len(self.products)}")
+        
+        # Final save to ensure all products are persisted
+        if self.products:
+            from datetime import datetime
+            filename = f"jumia_products_{datetime.now().strftime('%Y%m%d')}.csv"
+            self._save_csv(self.products, filename)
     
     def _extract_product_data(self, product_element):
         """
@@ -294,10 +306,6 @@ class Jumia(Base):
                 logger.error(f"❌ Failed to scrape category {category['name']}: {e}")
                 continue
         
-        # Save all products using parent class methods
-        logger.info(f"\n💾 Saving {len(self.products)} products...")
-        self._save_json(self.products, 'products.json')
-        self._save_csv(self.products, 'products.csv')
     
     def run(self, scrape_categories=True, scrape_products=True, max_products=1000):
         """

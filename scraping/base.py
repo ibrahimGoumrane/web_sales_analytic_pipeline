@@ -39,6 +39,10 @@ class Base(ABC):
         self.data_dir = os.path.join("data", "raw", site_name)
         os.makedirs(self.data_dir, exist_ok=True)
         
+        # Create categories directory
+        self.categories_dir = os.path.join("data", "raw", "categories")
+        os.makedirs(self.categories_dir, exist_ok=True)
+        
         # Create logs directory
         self.logs_dir = "logs"
         os.makedirs(self.logs_dir, exist_ok=True)
@@ -127,20 +131,25 @@ class Base(ABC):
         except Exception as e:
             logger.error(f"❌ Error saving JSON to {filename}: {e}")
     
-    def _save_csv(self, data, filename):
+    def _save_csv(self, data, filename, is_category=False):
         """
         Save data to CSV file.
         
         Args:
             data: List of dictionaries to save
             filename: Output filename
+            is_category: If True, saves to data/raw/categories/, otherwise to data/raw/{sitename}/
         """
         try:
             if not data:
                 logger.warning("⚠️ No data to save to CSV")
                 return
             
-            filepath = os.path.join(self.data_dir, filename)
+            # Determine the target directory
+            if is_category:
+                filepath = os.path.join(self.categories_dir, filename)
+            else:
+                filepath = os.path.join(self.data_dir, filename)
             
             # Get all unique keys from all dictionaries
             fieldnames = set()

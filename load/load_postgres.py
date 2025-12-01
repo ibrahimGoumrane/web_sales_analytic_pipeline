@@ -24,7 +24,7 @@ class PostgresLoader:
     
     def __init__(self):
         """Initialize database connection parameters and setup DB."""
-        self.host = "localhost" # Assuming running from host
+        self.host = os.getenv("POSTGRES_HOST", "postgres") # Use 'postgres' service name by default
         self.port = os.getenv("POSTGRES_PORT", "5432")
         self.target_database = "sales_analytics" # New dedicated database
         self.default_database = os.getenv("POSTGRES_DB", "airflow") # Default DB to connect to initially
@@ -109,7 +109,7 @@ class PostgresLoader:
             old_price NUMERIC(10, 2),
             discount NUMERIC(5, 2),
             rating NUMERIC(3, 2),
-            review_count INTEGER,
+            review_count NUMERIC(10),
             is_official_store BOOLEAN,
             image_url TEXT,
             scraped_at TIMESTAMP,
