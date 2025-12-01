@@ -9,7 +9,6 @@ from typing import Optional
 # Import all scrapers
 from .jumia import Jumia
 from .marjane import Marjane
-from .avito import Avito
 from .electroplanet import Electroplanet
 from .bikhir import Bikhir
 from .decathlon import Decathlon
@@ -28,7 +27,6 @@ class ScraperOrchestrator:
     SCRAPERS = {
         'jumia': Jumia,
         'marjane': Marjane,
-        'avito': Avito,
         'electroplanet': Electroplanet,
         'bikhir': Bikhir,
         'decathlon': Decathlon,

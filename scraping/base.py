@@ -17,7 +17,7 @@ class Base(ABC):
     """
     
     # Class-level constants
-    sites_available = ["jumia", "marjane", "avito", "electroplanet", "bikhir", "decathlon", "hmizate"]
+    sites_available = ["jumia", "marjane", "electroplanet", "bikhir", "decathlon", "hmizate"]
     
     def __init__(self, site_name, base_url):
         """
