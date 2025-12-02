@@ -1,7 +1,10 @@
-pandas
-requests
+# Core scraping and processing dependencies
 beautifulsoup4
 selenium
 psycopg2-binary
-apache-airflow==3.1.3
 python-dotenv
+
+# Plotting and visualization libraries (not in base image)
+matplotlib
+seaborn
+plotly

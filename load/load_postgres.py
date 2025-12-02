@@ -21,7 +21,21 @@ class PostgresLoader:
     Handles loading of processed data into PostgreSQL.
     Automatically connects and initializes schema on instantiation.
     """
-    
+    COLUMNS = [
+        "website",
+        "sku",
+        "name",
+        "category",
+        "url",
+        "current_price",
+        "old_price",
+        "discount",
+        "rating",
+        "review_count",
+        "is_official_store",
+        "image_url",
+        "scraped_at"
+    ]
     def __init__(self):
         """Initialize database connection parameters and setup DB."""
         self.host = os.getenv("POSTGRES_HOST", "postgres") # Use 'postgres' service name by default
@@ -104,6 +118,7 @@ class PostgresLoader:
             website VARCHAR(50) NOT NULL,
             sku VARCHAR(100), -- Stock Keeping Unit: Unique identifier for the product (e.g., 'SA024MP0ZDJYKNAFAMZ')
             name TEXT,
+            category VARCHAR(100), -- Product category
             url TEXT,
             current_price NUMERIC(10, 2),
             old_price NUMERIC(10, 2),
@@ -119,6 +134,7 @@ class PostgresLoader:
         
         CREATE INDEX IF NOT EXISTS idx_products_website ON products(website);
         CREATE INDEX IF NOT EXISTS idx_products_scraped_at ON products(scraped_at);
+        CREATE INDEX IF NOT EXISTS idx_products_category ON products(category);
         """
         
         try:
@@ -145,26 +161,20 @@ class PostgresLoader:
         # Ensure columns match schema
         df['website'] = website
         
-        # Select and order columns to match insert query
-        columns = [
-            'website', 'sku', 'name', 'url', 'current_price', 'old_price', 
-            'discount', 'rating', 'review_count', 'is_official_store', 
-            'image_url', 'scraped_at'
-        ]
         
         # Handle missing columns by adding them as None
-        for col in columns:
+        for col in self.COLUMNS:
             if col not in df.columns:
                 df[col] = None
                 
         # Replace NaN with None for SQL compatibility
         df = df.where(pd.notnull(df), None)
         
-        data_tuples = [tuple(x) for x in df[columns].to_numpy()]
+        data_tuples = [tuple(x) for x in df[self.COLUMNS].to_numpy()]
         
         insert_query = """
         INSERT INTO products (
-            website, sku, name, url, current_price, old_price, 
+            website, sku, name, category, url, current_price, old_price, 
             discount, rating, review_count, is_official_store, 
             image_url, scraped_at
         ) VALUES %s
@@ -180,7 +190,43 @@ class PostgresLoader:
             logger.error(f"❌ Failed to load data: {e}")
             self.conn.rollback()
             raise
+    def get_data_by_filters(self , **kwargs):
+        """
+        Get data from the products table based on filters.
+        
+        Args:
+            **kwargs: Filter conditions as keyword arguments.
+                     Use 'scraped_at' with a date object to filter by date (ignores time).
+        
+        Returns:
+            pd.DataFrame: Filtered data
+        """
+        try:
+            with self.conn.cursor() as cur:
+                query = "SELECT * FROM products WHERE "
+                conditions = []
+                params = []
+                
+                for key, value in kwargs.items():
+                    # First validate if the key is in the table
+                    if key not in self.COLUMNS:
+                        continue
 
+                    # Special handling for scraped_at: filter by DATE instead of exact timestamp
+                    if key == 'scraped_at':
+                        conditions.append("DATE(scraped_at) = %s")
+                        params.append(value)
+                    else:
+                        conditions.append(f"{key} = %s")
+                        params.append(value)
+                
+                query += " AND ".join(conditions)
+                cur.execute(query, params)
+                
+                return pd.DataFrame(cur.fetchall(), columns=[desc[0] for desc in cur.description])
+        except Exception as e:
+            logger.error(f"❌ Failed to get data: {e}")
+            raise
 if __name__ == "__main__":
     # Example usage
     loader = PostgresLoader()

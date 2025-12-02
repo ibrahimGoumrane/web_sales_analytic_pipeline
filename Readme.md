@@ -38,11 +38,20 @@ This project demonstrates a production-ready ETL pipeline that extracts product 
 
 Fully orchestrated with Apache Airflow:
 
+**Main ETL DAG (`jumia_daily_etl`):**
+
 - `scrape_jumia` — Extract products from Jumia.ma
 - `transform_jumia` — Clean and normalize data
 - `load_jumia` — Load to PostgreSQL warehouse
 - Daily scheduling with retry logic
 - Task dependency management
+
+**Analytics DAG (`analytics_report_param`):**
+
+- `generate_report` — Generate comprehensive analytics reports
+- Manual/API triggered with configurable parameters
+- Produces CSV reports and PNG visualizations
+- Includes: category stats, top products, discounts, price/rating analysis
 
 ## Tech Stack
 
@@ -63,7 +72,7 @@ web_sales_analytic_pipeline/
 │
 ├── airflow/
 │   └── dags/
-│       └── sales_etl_dag.py          # Main DAG definition
+│       └── sales_etl_dag.py          # Main DAG definition (scrape, transform, load)
 │
 ├── scraping/
 │   ├── base.py                       # Abstract base scraper class
@@ -79,22 +88,34 @@ web_sales_analytic_pipeline/
 │       └── main.py                   # Jumia data cleaner
 │
 ├── load/
-│   └── load_postgres.py              # PostgreSQL loader
+│   └── load_postgres.py              # PostgreSQL loader with analytics queries
+│
+├── reports/
+│   ├── base.py                       # Analytics report generator
+│   ├── helpers.py                    # Plotting utility functions
+│   ├── main.py                       # Report orchestrator
+│   └── __init__.py                   # Lazy import wrapper
 │
 ├── data/
 │   ├── raw/jumia/                    # Raw scraped data (JSON/CSV)
 │   ├── processed/jumia/              # Cleaned data (CSV)
-│   └── reports/jumia/                # Generated reports
+│   └── reports/report_YYYYMMDD/      # Generated analytics reports
+│       ├── *.csv                     # Category stats, top products, discounts, etc.
+│       ├── *.png                     # Visualizations and charts
+│       └── REPORT_SUMMARY.txt        # Executive summary
 │
-├── html_structure/
-│   └── jumia/                        # HTML samples for reference
+├── html_scruture/
+│   └── jumia/                        # HTML samples for scraper reference
 │
 ├── logs/                             # Application logs
-├── docker-compose.yaml               # Container orchestration
-├── Makefile                          # Build automation
+├── docker-compose.yaml               # Multi-container orchestration
+├── Dockerfile                        # Custom Airflow image with plotting libs
+├── Makefile                          # Build automation commands
 ├── requirements.txt                  # Python dependencies
-├── .env                              # Environment variables
+├── .env                              # Environment variables (not in Git)
 ├── StartupDocs.md                    # Quick start guide
+├── Recomendations.md                 # Next steps and enhancements
+├── README_DB.md                      # Database interrogation guide (not in Git)
 └── README.md                         # This file
 ```
 
@@ -206,16 +227,28 @@ For detailed setup instructions, see [StartupDocs.md](StartupDocs.md).
 
 - **`data/raw/jumia/`** — Raw scraped data (JSON/CSV)
 - **`data/processed/jumia/`** — Cleaned product data (CSV)
-- **`logs/`** — Scraper and transformation logs
+- **`data/reports/report_YYYYMMDD/`** — Analytics reports and visualizations:
+  - `category_statistics.csv` — Product counts, prices, ratings by category
+  - `top_rated_products.csv` — Top 50 products by weighted score
+  - `biggest_discounts.csv` — Top 100 products by discount percentage
+  - `price_statistics.csv` — Price distribution metrics
+  - `rating_statistics.csv` — Rating and review analysis
+  - `store_performance.csv` — Official vs non-official store comparison
+  - `daily_summary.csv` — Daily aggregated statistics
+  - `*.png` — 6 visualization charts
+  - `REPORT_SUMMARY.txt` — Executive summary
+- **`logs/`** — Application logs
 
 ## Pipeline Execution
 
-The DAG runs daily with the following workflow:
+### Daily ETL DAG (`jumia_daily_etl`)
+
+Runs daily at midnight with the following workflow:
 
 1. **Scrape Jumia** (Task: `scrape_jumia`)
 
    - Discovers categories automatically
-   - Scrapes 1000 products per category
+   - Scrapes 100 products per category
    - Saves raw data to `data/raw/jumia/`
 
 2. **Transform Data** (Task: `transform_jumia`)
@@ -228,6 +261,17 @@ The DAG runs daily with the following workflow:
    - Inserts cleaned data into PostgreSQL
    - Handles duplicates with UNIQUE constraints
    - Creates `sales_analytics` database automatically
+
+### Analytics Report DAG (`analytics_report_param`)
+
+Manual/API-triggered report generation:
+
+4. **Generate Reports** (Task: `generate_report`)
+   - Loads data from PostgreSQL by date
+   - Generates 7 CSV reports with statistics
+   - Creates 6 PNG visualizations (matplotlib/seaborn)
+   - Saves to `data/reports/report_YYYYMMDD/`
+   - Trigger with JSON: `{"website": "jumia", "date": "YYYY-MM-DD"}`
 
 ## Skills Demonstrated
 
