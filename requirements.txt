@@ -11,3 +11,6 @@ plotly
 
 # Streamlit
 streamlit
+
+# Adding pytest for testing purposes
+pytest

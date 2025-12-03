@@ -464,24 +464,22 @@ class AnalyticsReportGenerator:
         This is the primary entry point for report generation.
         
         Returns:
-            tuple: (summary_text, summary_filename, reports_data)
+            tuple: (summary_text, summary_filename)
         """
         logger.info("🚀 Starting comprehensive report generation...")
         
         # Initialize and validate
         self._init_report_generator()
         
-        reports_data = {}
-
         try:
             # Generate all reports
-            reports_data['category_statistics'] = self.generate_category_statistics()
-            reports_data['top_rated_products'] = self.generate_top_rated_products()
-            reports_data['discount_analysis'] = self.generate_discount_analysis()
-            reports_data['price_distribution_analysis'] = self.generate_price_distribution_analysis()
-            reports_data['rating_analysis'] = self.generate_rating_analysis()
-            reports_data['store_performance'] = self.generate_store_performance()
-            reports_data['daily_summary'] = self.generate_daily_summary()
+            self.generate_category_statistics()
+            self.generate_top_rated_products()
+            self.generate_discount_analysis()
+            self.generate_price_distribution_analysis()
+            self.generate_rating_analysis()
+            self.generate_store_performance()
+            self.generate_daily_summary()
             
             # Create a summary report text file
             summary_text = f"""
@@ -550,7 +548,7 @@ All files saved to: {self.report_folder}
             logger.info(f"✅ All reports generated successfully!")
             logger.info(f"📁 Reports location: {self.report_folder}")
             
-            return summary_text, 'REPORT_SUMMARY.txt', reports_data
+            return summary_text, 'REPORT_SUMMARY.txt'
             
         except Exception as e:
             logger.error(f"❌ Error generating reports: {e}")
@@ -570,7 +568,7 @@ def generate_analytics_report(website="jumia", date=None):
         date (str): Date in YYYY-MM-DD format (default: today)
     
     Returns:
-        tuple: (summary_text, summary_filename, reports_data)
+        tuple: (summary_text, summary_filename)
     """
     if date is None:
         date = datetime.now().strftime("%Y-%m-%d")

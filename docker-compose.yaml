@@ -343,7 +343,21 @@ services:
       postgres:
         condition: service_healthy
     restart: always
+  tests:
+    build:
+      context: .
+      dockerfile: pytest.Dockerfile
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - .:/app
+    command: ["python", "-m", "pytest", "-v"]
 volumes:
   postgres-db-volume:
-
-
