@@ -37,7 +37,7 @@ def main():
     
     try:
         # Generate the report using the convenience function
-        summary_text, summary_filename = generate_analytics_report(website=website, date=date)
+        summary_text, summary_filename, _ = generate_analytics_report(website=website, date=date)
         
         # Print summary to console
         print("\n" + summary_text)
