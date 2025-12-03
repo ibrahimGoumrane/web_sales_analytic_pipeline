@@ -1,0 +1,56 @@
+
+================================================================================
+SALES ANALYTICS REPORT
+================================================================================
+Website: JUMIA
+Date: 2025-12-02
+Generated: 2025-12-02 20:55:14
+================================================================================
+
+SUMMARY STATISTICS
+--------------------------------------------------------------------------------
+Total Products Scraped: 1,100
+Unique Categories: 12
+Average Price: 402.75 EGP
+Median Price: 179.00 EGP
+Price Range: 5.40 - 7799.00 EGP
+
+DISCOUNT INSIGHTS
+--------------------------------------------------------------------------------
+Products with Discounts: 1,024 (93.1%)
+Average Discount: 37.63%
+Maximum Discount: 89.00%
+
+RATING & REVIEWS
+--------------------------------------------------------------------------------
+Products with Ratings: 903 (82.1%)
+Average Rating: 4.19 / 5.0
+Total Reviews: 41,510
+
+STORE BREAKDOWN
+--------------------------------------------------------------------------------
+Official Store Products: 487 (44.3%)
+Non-Official Store Products: 613 (55.7%)
+
+================================================================================
+GENERATED FILES
+================================================================================
+CSV Reports:
+  - category_statistics.csv
+  - top_rated_products.csv
+  - biggest_discounts.csv
+  - price_statistics.csv
+  - rating_statistics.csv
+  - store_performance.csv
+  - daily_summary.csv
+
+Visualizations:
+  - category_statistics.png
+  - top_rated_products.png
+  - discount_analysis.png
+  - price_distribution.png
+  - rating_analysis.png
+  - store_performance.png
+
+All files saved to: data/reports/report_20251202
+================================================================================
