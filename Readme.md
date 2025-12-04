@@ -1,73 +1,79 @@
-# Web Sales Analytics ETL Pipeline
+# 🛒 Web Sales Analytics Pipeline
 
-> End-to-end data engineering project showcasing ETL pipelines, Apache Airflow orchestration, and web scraping from Jumia.ma
+[![Tests](https://github.com/ibrahimGoumrane/web_sales_analytic_pipeline/actions/workflows/tests.yml/badge.svg)](https://github.com/ibrahimGoumrane/web_sales_analytic_pipeline/actions/workflows/tests.yml)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
+[![Docker](https://img.shields.io/badge/docker-ready-brightgreen.svg)](https://www.docker.com/)
+[![Airflow](https://img.shields.io/badge/airflow-3.1.3-red.svg)](https://airflow.apache.org/)
 
-## Overview
+> **Production-grade data engineering project** featuring automated ETL pipelines, real-time analytics, and interactive dashboards for e-commerce price monitoring.
 
-This project demonstrates a production-ready ETL pipeline that extracts product and pricing data from Jumia.ma, transforms it into analytics-ready formats, and loads it into a PostgreSQL data warehouse. The entire pipeline is orchestrated with Apache Airflow and containerized with Docker for reliable, scheduled execution.
+## 📊 Overview
 
-## Features
+An end-to-end data engineering solution that **automatically scrapes, processes, and analyzes** product data from Jumia.ma (Morocco's largest e-commerce platform). The system generates comprehensive analytics reports with **visualizations** and provides an **interactive Streamlit dashboard** for real-time insights.
 
-### 🔍 Data Extraction
+**Built with modern data engineering best practices:** containerization, orchestration, automated testing, and CI/CD.
 
-- Web scraping with BeautifulSoup and Requests
-- Automatic category discovery and pagination handling
-- Extracts 1000+ products per category from Jumia.ma
-- Raw data storage in JSON/CSV format
-- Intelligent retry logic and rate limiting
+## ✨ Key Features
 
-### 🔄 Data Transformation
+### 🔍 **Automated Web Scraping**
 
-- Data cleaning with Pandas:
-  - Price normalization (removes currency, handles decimals)
-  - Discount percentage cleaning
-  - Rating and review count standardization
-  - Boolean conversion for official store badges
-  - Date/time handling
+- Multi-category product extraction from Jumia.ma
+- Intelligent pagination and rate limiting
+- 1000+ products scraped daily across electronics, fashion, home goods
+- Robust error handling and retry logic
 
-### 💾 Data Loading
+### 🔄 **Smart Data Processing**
 
-- PostgreSQL data warehouse with two databases:
-  - `airflow` — Airflow metadata
-  - `sales_analytics` — Product data warehouse
-- Automated database and schema creation
-- Conflict handling with UNIQUE constraints
-- Idempotent pipeline tasks for safe re-runs
+- Advanced price normalization (handles multiple currency formats)
+- Multi-locale numeric parsing (commas, spaces, mixed formats)
+- Data quality validation and cleansing
+- Idempotent transformations for reliable re-runs
 
-### ⚙️ Workflow Orchestration
+### 💾 **PostgreSQL Data Warehouse**
 
-Fully orchestrated with Apache Airflow:
+- Automated schema creation and migration
+- Optimized indexing on SKU and website columns
+- UPSERT logic for conflict resolution
+- Separate databases: `airflow` (metadata) + `sales_analytics` (data)
 
-**Main ETL DAG (`jumia_daily_etl`):**
+### ⚙️ **Apache Airflow Orchestration**
 
-- `scrape_jumia` — Extract products from Jumia.ma
-- `transform_jumia` — Clean and normalize data
-- `load_jumia` — Load to PostgreSQL warehouse
-- Daily scheduling with retry logic
-- Task dependency management
+- **Daily ETL DAG:** Automated scraping, transformation, and loading
+- **Analytics DAG:** On-demand report generation with 7 CSV outputs + 6 visualizations
+- Task dependencies and failure notifications
+- Parameterized execution with date selection
 
-**Analytics DAG (`analytics_report_param`):**
+### 📊 **Interactive Dashboard**
 
-- `generate_report` — Generate comprehensive analytics reports
-- Manual/API triggered with configurable parameters
-- Produces CSV reports and PNG visualizations
-- Includes: category stats, top products, discounts, price/rating analysis
+- Real-time Streamlit dashboard with live database connection
+- Category breakdown, price trends, and top products
+- Export capabilities and date range filtering
+- Professional metrics and visualizations
 
-## Tech Stack
+### 🧪 **Comprehensive Testing & CI/CD**
 
-| Component            | Technology               |
-| -------------------- | ------------------------ |
-| **Orchestration**    | Apache Airflow 2.8.1     |
-| **Web Scraping**     | BeautifulSoup4, Requests |
-| **Database**         | PostgreSQL 13            |
-| **Data Processing**  | Pandas                   |
-| **Containerization** | Docker & Docker Compose  |
-| **Storage**          | Local filesystem         |
-| **Python**           | 3.8+                     |
+- Automated unit tests for all pipeline components
+- GitHub Actions workflow with Docker Compose integration
+- Code coverage reporting
+- Tests run on every push/PR
 
-## Project Structure
+## 🛠️ Tech Stack
 
-```
+| Component            | Technology                  |
+| -------------------- | --------------------------- |
+| **Orchestration**    | Apache Airflow 3.1.3        |
+| **Web Scraping**     | BeautifulSoup4, Requests    |
+| **Database**         | PostgreSQL 16               |
+| **Data Processing**  | Pandas, NumPy               |
+| **Visualization**    | Matplotlib, Seaborn, Plotly |
+| **Dashboard**        | Streamlit                   |
+| **Containerization** | Docker & Docker Compose     |
+| **CI/CD**            | GitHub Actions, pytest      |
+| **Python**           | 3.12                        |
+
+## 📁 Project Structure
+
+```text
 web_sales_analytic_pipeline/
 │
 ├── airflow/
@@ -96,6 +102,19 @@ web_sales_analytic_pipeline/
 │   ├── main.py                       # Report orchestrator
 │   └── __init__.py                   # Lazy import wrapper
 │
+├── dashboard/
+│   └── main.py                       # Streamlit dashboard app
+│
+├── tests/
+│   ├── test_scraper.py               # Scraper unit tests
+│   ├── test_transformer.py           # Data cleaning tests
+│   ├── test_loader.py                # Database loader tests
+│   └── test_reports.py               # Report generation tests
+│
+├── .github/
+│   └── workflows/
+│       └── tests.yml                 # CI/CD pipeline configuration
+│
 ├── data/
 │   ├── raw/jumia/                    # Raw scraped data (JSON/CSV)
 │   ├── processed/jumia/              # Cleaned data (CSV)
@@ -104,28 +123,29 @@ web_sales_analytic_pipeline/
 │       ├── *.png                     # Visualizations and charts
 │       └── REPORT_SUMMARY.txt        # Executive summary
 │
-├── html_scruture/
-│   └── jumia/                        # HTML samples for scraper reference
+├── docs/
+│   ├── screenshots/                  # UI screenshots for documentation
+│   └── samples/                      # Sample data outputs
 │
-├── logs/                             # Application logs
-├── docker-compose.yaml               # Multi-container orchestration
 ├── Dockerfile                        # Custom Airflow image with plotting libs
+├── streamlit.Dockerfile              # Streamlit dashboard image
+├── pytest.Dockerfile                 # Test runner image
+├── docker-compose.yaml               # Multi-container orchestration
 ├── Makefile                          # Build automation commands
 ├── requirements.txt                  # Python dependencies
-├── .env                              # Environment variables (not in Git)
+├── .env                              # Environment variables
 ├── StartupDocs.md                    # Quick start guide
-├── Recomendations.md                 # Next steps and enhancements
-├── README_DB.md                      # Database interrogation guide (not in Git)
+├── Recomendations.md                 # Enhancement roadmap
 └── README.md                         # This file
 ```
 
-## Getting Started
+## 🚀 Getting Started
 
 ### Prerequisites
 
 - **Docker Desktop** 20.10+
-- **Python** 3.8+
-- **Make** (Windows: gnuwin32.sourceforge.net)
+- **Python** 3.12+
+- **Make** (optional, for convenience commands)
 - **Git**
 
 ### Quick Start
@@ -155,16 +175,24 @@ web_sales_analytic_pipeline/
    - Start PostgreSQL database
    - Initialize Airflow (creates admin user)
    - Start Airflow webserver and scheduler
+   - Launch Streamlit dashboard
    - Wait ~2-3 minutes for initialization
 
-4. **Access Airflow UI**
+4. **Access the dashboards**
 
-   - URL: http://localhost:8085
+   **Airflow UI:**
+
+   - URL: <http://localhost:8085>
    - Username: `admin`
    - Password: `admin`
 
+   **Streamlit Dashboard:**
+
+   - URL: <http://localhost:8501>
+   - Interactive analytics and visualizations
+
 5. **Run the pipeline**
-   - Find `jumia_daily_etl` DAG in the UI
+   - Find `jumia_daily_etl` DAG in the Airflow UI
    - Toggle switch to enable
    - Click ▶️ Play → Trigger DAG
    - Monitor execution (Green = Success)
@@ -195,11 +223,12 @@ make restart       # Restart services
 make logs          # View all logs
 make clean         # Remove all data and reset
 make ps            # Check container status
+make test          # Run unit tests locally
 ```
 
 For detailed setup instructions, see [StartupDocs.md](StartupDocs.md).
 
-## Data Output
+## 📊 Data Output
 
 ### Database Schema
 
@@ -239,7 +268,7 @@ For detailed setup instructions, see [StartupDocs.md](StartupDocs.md).
   - `REPORT_SUMMARY.txt` — Executive summary
 - **`logs/`** — Application logs
 
-## Pipeline Execution
+## ⚙️ Pipeline Execution
 
 ### Daily ETL DAG (`jumia_daily_etl`)
 
@@ -266,51 +295,68 @@ Runs daily at midnight with the following workflow:
 
 Manual/API-triggered report generation:
 
-4. **Generate Reports** (Task: `generate_report`)
-   - Loads data from PostgreSQL by date
-   - Generates 7 CSV reports with statistics
-   - Creates 6 PNG visualizations (matplotlib/seaborn)
-   - Saves to `data/reports/report_YYYYMMDD/`
-   - Trigger with JSON: `{"website": "jumia", "date": "YYYY-MM-DD"}`
+**Generate Reports** (Task: `generate_report`)
 
-## Skills Demonstrated
+- Loads data from PostgreSQL by date
+- Generates 7 CSV reports with statistics
+- Creates 6 PNG visualizations (matplotlib/seaborn/plotly)
+- Saves to `data/reports/report_YYYYMMDD/`
+- Trigger with JSON: `{"website": "jumia", "date": "YYYY-MM-DD"}`
+
+## 🎯 Skills Demonstrated
 
 - ✅ **ETL Pipeline Design** — Complete Extract-Transform-Load workflow
 - ✅ **Apache Airflow** — DAG creation, task dependencies, scheduling
-- ✅ **Web Scraping** — BeautifulSoup, pagination, category discovery
-- ✅ **Data Engineering** — Pandas transformations, data cleaning
-- ✅ **Database Design** — PostgreSQL schema, indexing, constraints
-- ✅ **Containerization** — Docker Compose multi-service orchestration
-- ✅ **DevOps** — Makefile automation, environment management
-- ✅ **Code Organization** — Abstract base classes, modular design
+- ✅ **Web Scraping** — BeautifulSoup, pagination, dynamic content handling
+- ✅ **Data Engineering** — Advanced data cleaning, type conversions, validation
+- ✅ **Database Design** — PostgreSQL schema, indexing, UPSERT operations
+- ✅ **Containerization** — Multi-service Docker Compose orchestration
+- ✅ **Testing** — Unit tests, integration tests, CI/CD automation
+- ✅ **DevOps** — GitHub Actions, automated testing, Docker workflows
+- ✅ **Data Visualization** — Matplotlib, Seaborn, Plotly dashboards
+- ✅ **Code Quality** — Abstract base classes, modular design, type hints
 
-## Future Enhancements
+## 🚀 Future Enhancements
 
-See [Recommendations.md](Recommendations.md) for planned improvements:
+See [Recomendations.md](Recomendations.md) for detailed roadmap:
 
-- Report generation and analytics
-- Data visualization dashboards
-- Additional e-commerce site support
-- Cloud deployment (AWS/GCP/Azure)
-- API layer for data access
+- 🌐 **REST API Layer** — FastAPI endpoints for programmatic access
+- ☁️ **Cloud Deployment** — AWS/GCP/Azure production deployment
+- 🛍️ **Multi-Site Support** — Expand to other e-commerce platforms
+- 🤖 **ML Price Prediction** — Forecast price trends using historical data
+- 📧 **Alert System** — Email notifications for price drops and deals
 
-## Connection Details
+## 🔗 Access Points
 
-**Airflow Web UI:**
+### Airflow Web UI
 
-- URL: http://localhost:8085
-- Username: `admin`
-- Password: `admin`
+- **URL:** <http://localhost:8085>
+- **Username:** `admin`
+- **Password:** `admin`
 
-**PostgreSQL:**
+### Streamlit Dashboard
 
-- Host: `localhost`
-- Port: `5432`
-- User: `airflow`
-- Password: `airflow`
-- Databases: `airflow`, `sales_analytics`
+- **URL:** <http://localhost:8501>
+- **Features:** Interactive analytics, filters, exports
 
-## Troubleshooting
+### PostgreSQL Database
+
+- **Host:** `localhost`
+- **Port:** `5432`
+- **User:** `airflow`
+- **Password:** `airflow`
+- **Databases:** `airflow`, `sales_analytics`
+
+### Running Tests
+
+```bash
+# Local test execution
+docker compose run --rm tests
+
+# CI/CD runs automatically on push to main/develop
+```
+
+## 🐛 Troubleshooting
 
 Common issues and solutions:
 
@@ -323,15 +369,48 @@ Common issues and solutions:
 
 For detailed troubleshooting, see [StartupDocs.md](StartupDocs.md).
 
-## Contributing
+## 📸 Screenshots
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+### Airflow DAGs
 
-## License
+![Airflow ETL DAG](docs/screenshots/dag_jumia_scraper.png)
+![Analytics Report DAG](docs/screenshots/dag_report_generation.png)
 
-This project is licensed under the MIT License.
+### Streamlit Dashboard
+
+![Dashboard](docs/screenshots/streamlit.png)
+
+### Database
+
+![PostgreSQL](docs/screenshots/pgdb.png)
+
+## 🤝 Contributing
+
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 📧 Contact
+
+**Ibrahim Goumrane**
+
+- GitHub: [@ibrahimGoumrane](https://github.com/ibrahimGoumrane)
+- LinkedIn: [Ibrahim Goumrane](https://www.linkedin.com/in/ibrahim-goumrane)
 
 ---
 
-**Built for data engineering learning and portfolio development**  
-_Showcasing ETL pipelines, Airflow orchestration, and modern data engineering practices_
+<div align="center">
+
+**⭐ Star this repo if you find it useful!**
+
+_Built to showcase modern data engineering practices and production-ready ETL pipelines_
+
+</div>
