@@ -46,10 +46,27 @@ class CleanData(ABC):
         if pd.isna(price_str):
             return None
         try:
-            # Remove currency and whitespace
-            clean_str = str(price_str).replace('Dhs', '').replace(',', '').strip()
-            # Handle ranges or other non-numeric formats if necessary
-            return float(clean_str)
+            # Convert to string
+            s = str(price_str)
+            # Remove currency symbols (DH, Dhs, etc.) and whitespace
+            # Keep digits, dots, commas
+            s = re.sub(r'[^\d.,]', '', s)
+            
+            if not s:
+                return None
+
+            # Handle comma as decimal if it appears at the end like 299,99
+            # But handle 1,229.00 (comma is thousands)
+            
+            if ',' in s and '.' in s:
+                if s.find(',') < s.find('.'):
+                    s = s.replace(',', '') # 1,234.56 -> 1234.56
+                else:
+                    s = s.replace('.', '').replace(',', '.') # 1.234,56 -> 1234.56
+            elif ',' in s:
+                s = s.replace(',', '.')
+            
+            return float(s)
         except (ValueError, TypeError):
             return None
 
@@ -60,8 +77,13 @@ class CleanData(ABC):
         try:
             if isinstance(value, (int, float)):
                 return float(value)
+            
+            s = str(value).strip()
+            # Handle comma decimal
+            s = s.replace(',', '.')
+            
             # Extract first number found
-            match = re.search(r'(\d+(\.\d+)?)', str(value))
+            match = re.search(r'(\d+(\.\d+)?)', s)
             return float(match.group(1)) if match else None
         except Exception:
             return None

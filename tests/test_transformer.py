@@ -12,8 +12,9 @@ class TestTransformer(unittest.TestCase):
             'review_count': ['120', '0', None],
             'is_official_store': ['Official Store', 'Non-Official Store', None],
         })
-        cleaner = CleanDataJumia(df)
-        out = cleaner.clean()
+        cleaner = CleanDataJumia()
+        out = cleaner.clean(df)
+        print(out['current_price'].dtype.kind)
         self.assertTrue(out['current_price'].dtype.kind in 'fi')
         self.assertTrue(out['old_price'].dtype.kind in 'fi')
         self.assertTrue(out['discount'].dtype.kind in 'fi')

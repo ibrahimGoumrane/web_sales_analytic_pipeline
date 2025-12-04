@@ -4,7 +4,8 @@ from scraping.utils import handle_url
 class TestScraperUtils(unittest.TestCase):
     def test_handle_url_adds_scheme(self):
         url = "www.jumia.ma/product"
-        fixed = handle_url(url)
+        fixed = handle_url(url , "https://")
+        print(fixed)
         self.assertTrue(fixed.startswith("https://"))
         self.assertIn("jumia.ma", fixed)
 

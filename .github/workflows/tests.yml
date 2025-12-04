@@ -1,0 +1,71 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Create .env file for tests
+        run: |
+          cat > .env << EOF
+          POSTGRES_USER=airflow
+          POSTGRES_PASSWORD=airflow
+          POSTGRES_DB=airflow
+          POSTGRES_HOST=postgres
+          POSTGRES_PORT=5432
+          AIRFLOW_UID=50000
+          AIRFLOW_PORT=8085
+          EOF
+
+      - name: Start PostgreSQL service
+        run: |
+          docker compose up -d postgres
+
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          timeout=60
+          until docker compose exec -T postgres pg_isready -U airflow; do
+            timeout=$((timeout - 1))
+            if [ $timeout -le 0 ]; then
+              echo "PostgreSQL did not become ready in time"
+              docker compose logs postgres
+              exit 1
+            fi
+            echo "Waiting for PostgreSQL to be ready... ($timeout seconds remaining)"
+            sleep 2
+          done
+          echo "PostgreSQL is ready!"
+          # Give it an extra moment to fully initialize
+          sleep 3
+
+      - name: Build and run tests with coverage
+        run: |
+          docker compose run --rm tests
+
+      - name: Display logs on failure
+        if: failure()
+        run: |
+          echo "=== PostgreSQL Logs ==="
+          docker compose logs postgres
+          echo "=== Test Container Logs ==="
+          docker compose logs tests
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker compose down -v
+          docker compose rm -f

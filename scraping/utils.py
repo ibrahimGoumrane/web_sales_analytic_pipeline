@@ -1,3 +1,5 @@
+from urllib.parse import urljoin
+
 def handle_url(url, base_url=None):
     """
     Normalize and construct full URLs from relative or absolute URLs.
@@ -16,14 +18,7 @@ def handle_url(url, base_url=None):
     if url.startswith('http://') or url.startswith('https://'):
         return url
     
-    # Relative URL starting with /
-    if url.startswith('/'):
-        if base_url:
-            return base_url.rstrip('/') + url
-        return url
-    
-    # Relative URL without leading /
     if base_url:
-        return base_url.rstrip('/') + '/' + url
+        return urljoin(base_url, url)
     
     return url

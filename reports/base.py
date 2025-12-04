@@ -317,7 +317,7 @@ class AnalyticsReportGenerator:
                         color='teal')
         
         # Box plot
-        axes[1, 0].boxplot(self.data['current_price'].dropna(), vert=False)
+        axes[1, 0].boxplot(self.data['current_price'].dropna(), orientation='horizontal')
         PlotHelper.style_axis(axes[1, 0], 'Price Distribution Box Plot', 'Price (EGP)')
         
         # Log scale histogram for better visibility
@@ -341,7 +341,7 @@ class AnalyticsReportGenerator:
         ].copy()
         
         # Rating statistics
-        rating_stats = rated.groupby(pd.cut(rated['rating'], bins=[0, 1, 2, 3, 4, 5])).agg({
+        rating_stats = rated.groupby(pd.cut(rated['rating'], bins=[0, 1, 2, 3, 4, 5]) , observed=True).agg({
             'sku': 'count',
             'review_count': 'sum',
             'current_price': 'mean'
@@ -373,7 +373,7 @@ class AnalyticsReportGenerator:
         axes[1, 0].set_yscale('log')
         
         # Average price by rating range
-        rating_price = rated.groupby(pd.cut(rated['rating'], bins=5))['current_price'].mean()
+        rating_price = rated.groupby(pd.cut(rated['rating'], bins=5), observed=True)['current_price'].mean()
         PlotHelper.create_bar(axes[1, 1], rating_price.index.astype(str), rating_price.values,
                         'Average Price by Rating Range', 'Rating Range', 'Average Price (EGP)',
                         color='coral')

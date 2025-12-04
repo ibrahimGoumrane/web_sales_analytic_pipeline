@@ -20,14 +20,21 @@ class CleanDataJumia(CleanData):
     Jumia-specific data cleaning pipeline.
     """
     
-    def __init__(self):
+    def __init__(self, df=None):
         """Initialize the Jumia data cleaner."""
         super().__init__('jumia')
+        self.df = df
 
-    def clean(self, df):
+    def clean(self, df=None):
         """
         Specific cleaning logic for Jumia data.
         """
+        if df is None:
+            df = self.df
+            
+        if df is None:
+            raise ValueError("No DataFrame provided")
+
         df = df.copy()
         
         # Clean prices
